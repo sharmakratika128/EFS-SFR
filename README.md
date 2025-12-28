@@ -26,7 +26,7 @@ This repository contains the code for the paper:
 
 Due to patient privacy, the raw clinical dataset is not publicly included.
 
-A schema-only sample is provided in data/example_schema.csv.
+A schema-only sample is provided in Sample_Enabled_Patients_Data_Updated .
 
 To request access, contact the corresponding author -  sharma.kratika128@gmail.com 
 ## Installation
