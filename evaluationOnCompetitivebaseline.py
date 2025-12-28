@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-scripts/run_rival_methods.py
+evaluationOnCompetitivebaseline.py
 
 This script:
 - Loads your CSV
 - Uses 10 selected features from EFS-SFR
-- Runs recent competitive baselines: CatBoost, LightGBM, ExtraTrees, DecisionTree, MLP, Stacking
+- Runs recent competitive baselines: CatBoost, LightGBM, ExtraTrees, DecisionTree, MLP/ANN, Stacking
 - Evaluates with Stratified 5-fold CV
 - Reports Acc / Recall / F1 / AUROC
 - Measures Train time (s) and Inference time (ms/sample)
 - Exports a LaTeX table to: results/tables/table_rival_methods.tex
 
 Example:
-  python scripts/run_rival_methods.py --data data/Enabled_Patients_Data.csv
+  python evaluationOnCompetitivebaseline.py --data Sample_Enabled_Patients_Data_Updated.csv
 """
 
 import os
@@ -95,11 +95,10 @@ def _clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 def get_models(random_state: int = 42) -> Dict[str, Tuple[object, str]]:
     """
-    Returns dict: name -> (estimator, type_label)
+    Returns dict: model_name -> (estimator, type_label)
     """
     models: Dict[str, Tuple[object, str]] = {}
 
-    # CatBoost
     models["CatBoost"] = (
         CatBoostClassifier(
             depth=6,
@@ -112,7 +111,6 @@ def get_models(random_state: int = 42) -> Dict[str, Tuple[object, str]]:
         "Boosting (trees)",
     )
 
-    # LightGBM
     models["LightGBM"] = (
         lgb.LGBMClassifier(
             n_estimators=500,
@@ -125,19 +123,16 @@ def get_models(random_state: int = 42) -> Dict[str, Tuple[object, str]]:
         "Boosting (trees)",
     )
 
-    # Extra Trees
     models["Extra Trees"] = (
         ExtraTreesClassifier(n_estimators=500, random_state=random_state, n_jobs=-1),
         "Bagging (trees)",
     )
 
-    # Decision Tree
     models["Decision Tree"] = (
         DecisionTreeClassifier(random_state=random_state, max_depth=5),
         "Interpretable tree",
     )
 
-    # MLP/ANN (needs scaling)
     models["MLP/ANN"] = (
         Pipeline(
             steps=[
@@ -156,7 +151,6 @@ def get_models(random_state: int = 42) -> Dict[str, Tuple[object, str]]:
         "Neural network",
     )
 
-    # Stacking
     base_estimators = [
         (
             "lr",
@@ -213,7 +207,6 @@ def evaluate_cv(
             if hasattr(model, "predict_proba"):
                 prob = model.predict_proba(Xte)[:, 1]
             else:
-                # fallback: no probas available
                 pred = model.predict(Xte)
                 prob = pred.astype(float)
             t3 = time.perf_counter()
@@ -249,18 +242,23 @@ def evaluate_cv(
 def save_latex_table(
     results: List[ModelResult],
     out_path: str = "results/tables/table_rival_methods.tex",
-    caption: str = (
-        "Comparative evaluation with recent competitive baselines on the proposed cohort using "
-        "the EFS-SFR selected subset ($\\alpha=0.32$). \\#Feat denotes the number of input features "
-        "used by each model (10 for all methods in this experiment). Results are mean values under "
-        "stratified 5-fold CV. Systolic/diastolic BP may be in normalized units depending on the dataset."
-    ),
     label: str = "tab:rival_methods",
 ) -> None:
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
-    # sort by AUROC desc
-    results_sorted = sorted(results, key=lambda r: (r.auroc if not np.isnan(r.auroc) else -1.0), reverse=True)
+    results_sorted = sorted(
+        results,
+        key=lambda r: (r.auroc if not np.isnan(r.auroc) else -1.0),
+        reverse=True,
+    )
+
+    caption = (
+        "Comparative evaluation with recent competitive baselines on the proposed cohort "
+        "using the EFS-SFR selected subset ($\\alpha=0.32$). "
+        "\\#Feat denotes the number of input features used by each model (10 for all methods in this experiment). "
+        "Results are mean values under stratified 5-fold CV. "
+        "Training and inference time are measured on the same machine for all methods."
+    )
 
     lines = []
     lines.append(r"\begin{table*}[t]")
@@ -271,7 +269,9 @@ def save_latex_table(
     lines.append(r"\setlength{\tabcolsep}{4.2pt}")
     lines.append(r"\begin{tabular}{lcccccccc}")
     lines.append(r"\hline")
-    lines.append(r"\textbf{Model} & \textbf{Type} & \textbf{\#Feat} & \textbf{Acc.} & \textbf{Recall} & \textbf{F1} & \textbf{AUROC} & \textbf{Train (s)} & \textbf{Infer (ms)} \\")
+    lines.append(
+        r"\textbf{Model} & \textbf{Type} & \textbf{\#Feat} & \textbf{Acc.} & \textbf{Recall} & \textbf{F1} & \textbf{AUROC} & \textbf{Train (s)} & \textbf{Infer (ms)} \\"
+    )
     lines.append(r"\hline")
 
     for r in results_sorted:
@@ -292,11 +292,23 @@ def save_latex_table(
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run recent competitive baselines with stratified 5-fold CV.")
-    parser.add_argument("--data", type=str, required=True, help="Path to CSV dataset.")
+    parser = argparse.ArgumentParser(
+        description="Run recent competitive baselines with stratified 5-fold CV."
+    )
+    parser.add_argument(
+        "--data",
+        type=str,
+        required=True,
+        help="Path to CSV dataset (patient data should NOT be committed to GitHub).",
+    )
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument("--folds", type=int, default=5, help="Number of CV folds.")
-    parser.add_argument("--out", type=str, default="results/tables/table_rival_methods.tex", help="Output LaTeX file path.")
+    parser.add_argument(
+        "--out",
+        type=str,
+        default="results/tables/table_rival_methods.tex",
+        help="Output LaTeX file path.",
+    )
     args = parser.parse_args()
 
     df = pd.read_csv(args.data)
@@ -306,12 +318,13 @@ def main():
     y = df[TARGET_COL].values
 
     print(f"Loaded: {args.data}")
-    print(f"Samples: {len(df)} | PE: {int(y.sum())} | Non-PE: {int((y==0).sum())} | Features: {X.shape[1]}")
+    print(
+        f"Samples: {len(df)} | PE: {int(y.sum())} | Non-PE: {int((y==0).sum())} | Features: {X.shape[1]}"
+    )
 
     models = get_models(random_state=args.seed)
     results = evaluate_cv(models, X, y, n_splits=args.folds, seed=args.seed)
 
-    # Print summary
     print("\nResults (mean over folds):")
     for r in sorted(results, key=lambda rr: rr.auroc, reverse=True):
         print(
