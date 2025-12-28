@@ -1,0 +1,10 @@
+Minimal requirements
+-numpy
+-pandas
+-scikit-learn
+-xgboost
+-matplotlib
+-pyyaml
+-joblib
+-lightgbm
+-catboost
