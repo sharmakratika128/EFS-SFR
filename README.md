@@ -22,7 +22,13 @@ This repository contains the code for the paper:
 
 
 ---
+## **Data access**
 
+Due to patient privacy, the raw clinical dataset is not publicly included.
+
+A schema-only sample is provided in data/example_schema.csv.
+
+To request access, contact the corresponding author -  sharma.kratika128@gmail.com 
 ## Installation
 
 ### Option A: pip + venv (recommended)
@@ -35,11 +41,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 ---
+---
 
-## **Data access**
 
-Due to patient privacy, the raw clinical dataset is not publicly included.
-
-A schema-only sample is provided in data/example_schema.csv.
-
-To request access, contact the corresponding author -  sharma.kratika128@gmail.com 
