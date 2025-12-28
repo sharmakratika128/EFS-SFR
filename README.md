@@ -30,16 +30,6 @@ Due to patient privacy, the raw clinical dataset is not publicly included.
 A schema-only sample is provided in Sample_Enabled_Patients_Data_Updated .
 
 To request access, contact the corresponding author -  sharma.kratika128@gmail.com 
-## Installation
-
-### Option A: pip + venv (recommended)
-
-```bash
-python -m venv .venv
-# Windows: .venv\Scripts\activate
-source .venv/bin/activate
-
-pip install -r requirements.txt
 
 ---
 ---
