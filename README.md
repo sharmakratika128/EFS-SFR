@@ -15,7 +15,7 @@ This repository contains the code for the paper:
 ---
 ## Repository contents
 
-- `EnsembleFeatureSelection&Prediction.ipynb` — EFS‑SFR feature ranking + selection implementation,  train/evaluate models with **full** vs **selected** features; saves CSV outputs;  minimal synthetic (toy) run; **no patient data required**
+- `EnsembleFeatureSelection&Prediction.py` — EFS‑SFR feature ranking + selection implementation,  train/evaluate models with **full** vs **selected** features; saves CSV outputs;  minimal synthetic (toy) run; **no patient data required**
 - `evaluationOnCompetitivebaseline.py` —strong tabular baselines (XGBoost/LightGBM/CatBoost)
 - `README.md` — dataset placement and privacy notes
 - `requirements.txt` — core dependencies
