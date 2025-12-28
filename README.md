@@ -34,6 +34,8 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
+---
+
 ## **Data access**
 
 Due to patient privacy, the raw clinical dataset is not publicly included.
